@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ problem.title }} - 問題詳細</title>
+        <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+        </script>
+        <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+        </script>
+        <style>
+            .status-AC { color: #5cb85c; font-weight: bold; }
+            .status-WA { color: #d9534f; font-weight: bold; }
+            .status-TLE { color: #f0ad4e; font-weight: bold; }
+            .status-RE { color: #777; font-weight: bold; }
+            pre { background: #eee; padding: 15px; border-radius: 5px; }
+        </style>
+    </head>
+    <body style="max-width: 900px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
+        <h1>{{ problem.title }}</h1>
+        <p>実行時間制限: {{ problem.time_limit }} sec / メモリ制限: {{ problem.memory_limit }} MB</p>
+        <p>配点: {{ problem.score }} 点</p>
+        <hr>
+
+        <h3>問題文</h3>
+        <div style="white-space: pre-wrap; line-height: 1.6;">{{ problem.statement }}</div>
+
+        <hr>
+        <h3>入力例 / 出力例</h3>
+        {% for sample in samples %}
+            <div style="background-color: #f8f9fa; padding: 10px; border: 1px solid #ddd; margin-bottom: 20px;">
+                <h4>入力例 {{ forloop.counter }}</h4>
+                <pre>{{ sample.input_data }}</pre>
+                
+                <h4>出力例 {{ forloop.counter }}</h4>
+                <pre>{{ sample.output_data }}</pre>
+            </div>
+        {% empty %}
+            <p>サンプルケースはありません。</p>
+        {% endfor %}
+
+        <hr>
+        <h3>提出</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom: 10px;">
+                <label>言語: </label>
+                <select name="language" style="padding: 5px;">
+                    <option value="python" {% if selected_lang == 'python' %}selected{% endif %}>Python3</option>
+                    <option value="c" {% if selected_lang == 'c' %}selected{% endif %}>C (gcc)</option>
+                    <option value="cpp" {% if selected_lang == 'cpp' %}selected{% endif %}>C++ (g++)</option>
+                </select>
+            </div>
+            <div>
+                <label>ソースコード:</label><br>
+                <textarea name="code" rows="20" style="width: 100%; font-family: monospace; padding: 10px;" placeholder="ここに貼り付け"></textarea>
+            </div>
+            <br>
+            <button type="submit" style="padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px;">提出する</button>
+        </form>
+
+        {% if result %}
+        <div style="margin-top: 20px; padding: 15px; border: 2px solid #333; background: #f0f0ff;">
+            <h3 style="margin-top: 0;">判定結果</h3>
+            <span class="status-{{ result }}" style="font-size: 2em;">{{ result }}</span>
+        </div>
+        {% endif %}
+
+        <p style="margin-top: 40px;"><a href="{% url 'problem_list' %}">← 問題一覧に戻る</a></p>
+    </body>
+</html>

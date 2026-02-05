@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>問題一覧</h2>
+    <ul>
+        {% for problem in problems %}
+            <li><a href="{% url 'problem_detail' problem.pk %}">{{ problem.title }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

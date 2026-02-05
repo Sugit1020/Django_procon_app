@@ -1,0 +1,12 @@
+{% extends 'procon/base.html' %}
+
+{% block content %}
+    <h2>新規ユーザー登録（大会参加者用）</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">登録する</button>
+    </form>
+    <hr>
+    <p><a href="{% url 'login' %}">既にアカウントをお持ちの方はこちら</a></p>
+{% endblock %}

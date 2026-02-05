@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}プロコン大会{% endblock %}</title>
+</head>
+<body>
+    <div style="background: #f4f4f4; padding: 15px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px;">
+        {% if user.is_authenticated %}
+            <strong>参加者: {{ user.username }} さん</strong>
+        {% else %}
+            <strong>モード: ゲスト</strong>
+        {% endif %}
+
+        {% if user_score is not None %}
+            <span style="margin-left: 20px; font-weight: bold; color: #2980b9;">
+                現在の合計得点: {{ user_score }} 点
+            </span>
+        {% endif %}
+
+        <div style="float: right;">
+            <a href="{% url 'problem_list' %}">問題一覧</a> |
+            {% if user.is_authenticated %}
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">ログアウト</button>
+</form>
+            {% else %}
+                <a href="{% url 'login' %}">ログイン</a> | <a href="{% url 'signup' %}">参加登録</a>
+            {% endif %}
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

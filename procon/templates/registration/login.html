@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ログイン - プロコン大会</title>
+</head>
+<body>
+    <h2>大会参加者ログイン</h2>
+
+    {% if form.errors %}
+        <p style="color: red;">ユーザー名かパスワードが間違っています。</p>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div>
+            <label>ユーザー名:</label>
+            {{ form.username }}
+        </div>
+        <div>
+            <label>パスワード:</label>
+            {{ form.password }}
+        </div>
+        <button type="submit">ログイン</button>
+    </form>
+
+    <hr>
+    <p>アカウントをお持ちでない方、またはテストの方は：</p>
+    <p><a href="{% url 'problem_list' %}">ゲストモードで問題を解く</a></p>
+    <p>アカウントを持っていない人は <a href="{% url 'signup' %}">こちらから登録</a> してください。</p>
+</body>
+</html>

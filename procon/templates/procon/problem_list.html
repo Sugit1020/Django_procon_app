@@ -1,0 +1,28 @@
+{% extends 'procon/base.html' %}
+
+{% block title %}問題一覧 - プロコン大会{% endblock %}
+
+{% block content %}
+    <h1>問題一覧</h1>
+    <hr>
+
+    <ul>
+        {% for problem in problems %}
+            <li style="margin-bottom: 10px; list-style: none;">
+                {% if problem.id in solved_ids %}
+                    <span style="color: green; font-weight: bold; margin-right: 10px;">✅ AC済み</span>
+                {% else %}
+                    <span style="color: #ccc; margin-right: 10px;">・ 未解答</span>
+                {% endif %}
+
+                <a href="{% url 'problem_detail' problem.pk %}">
+                    <strong>{{ problem.title }}</strong>
+                </a>
+                <span style="margin-left: 10px; color: #000000;">(得点: {{ problem.score }} 点)</span>
+                <span style="margin-left: 10px; color: #888;">[制限時間: {{ problem.time_limit }} 秒, メモリ制限: {{ problem.memory_limit }} MB]</span>
+            </li>
+        {% empty %}
+            <li>登録されている問題はありません。</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

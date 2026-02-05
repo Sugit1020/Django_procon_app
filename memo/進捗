@@ -1,0 +1,138 @@
+Webアプリケーション開発の継続、お疲れ様です！ 非常に重要なフェーズ（エンジンの完成とDjangoへの統合）まで到達しましたね。
+
+次回のセッションで、別のGeminiがこの状況を瞬時に理解し、スムーズに開発を続行できるように、**「これまでの経緯」「現在のコード」「次回の課題」**を網羅した引き継ぎメモを作成しました。
+
+次回、この内容をそのままチャット欄に貼り付けてください。
+
+🚀 競技プログラミングアプリ開発：詳細引き継ぎメモ
+【プロジェクト概要】
+大学サークル向けのAtCoder風WebアプリをDjangoで開発中。PCをサーバーとして大会を開催するのが目的。 現在は「ジャッジ機能のDocker化」と「Djangoビューへの統合」が完了した直後の状態。
+
+【現在の開発状況】
+インフラ（Docker）:
+
+judge-image という名前でビルド済み。
+
+環境：python:3.10-slim ベースに gcc, g++ をインストール済み。
+
+モデル (models.py):
+
+Problem: 問題情報（タイトル、本文、制限時間、メモリ制限）。
+
+TestCase: 入出力データ。ProblemとForeignKeyで紐付け。
+
+Submission: 提出コード、言語、判定結果（AC, WA, WJ等）を記録。
+
+ジャッジエンジン (views.py内):
+
+run_code_in_docker 関数を実装済み。
+
+cat << 'EOF' (ヒアドキュメント) を使用してDocker内でソースを生成。
+
+timeout 2s コマンドで無限ループ対策済み。
+
+network_disabled=True, mem_limit="256m" でセキュリティを確保。
+
+動作確認状況:
+
+judge_test.py による単体テストでC言語コード（入力を2倍にするプログラム）の実行に成功し、「100」という正しい出力を得ている。
+
+views.py へのロジック統合が完了し、Submission への保存と全テストケースのループ判定ロジックまで記述済み。
+
+【現在のソースコード (views.py)】
+Python
+# ※ここに最新のviews.pyの内容を貼り付けておくとスムーズです
+from django.shortcuts import render, get_object_or_404
+from .models import Problem, TestCase, Submission
+import docker
+
+# --- Dockerジャッジエンジン (移植) ---
+def run_code_in_docker(language, code, input_data):
+    client = docker.from_env()
+    if language == 'python':
+        exec_cmd = f"cat << 'EOF' > sol.py\n{code}\nEOF\necho '{input_data}' | timeout 2s python3 sol.py"
+    elif language == 'cpp':
+        exec_cmd = f"cat << 'EOF' > sol.cpp\n{code}\nEOF\ng++ sol.cpp -o sol.out && echo '{input_data}' | timeout 2s ./sol.out"
+    elif language == 'c':
+        exec_cmd = f"cat << 'EOF' > sol.c\n{code}\nEOF\ngcc sol.c -o sol.out && echo '{input_data}' | timeout 2s ./sol.out"
+    else:
+        return "Unsupported Language"
+
+    try:
+        output = client.containers.run(
+            image="judge-image",
+            command=["sh", "-c", exec_cmd],
+            network_disabled=True,
+            mem_limit="256m",
+            stderr=True,
+            remove=True
+        )
+        return output.decode('utf-8').strip()
+    except Exception as e:
+        # タイムアウトやコンパイルエラーなど
+        return f"Error: {str(e)}"
+
+# --- View関数 ---
+
+def problem_list(request):
+    problems = Problem.objects.all()
+    return render(request, 'procon/problem_list.html', {'problems': problems})
+
+def problem_detail(request, pk):
+    problem = get_object_or_404(Problem, pk=pk)
+    result = None
+
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        lang = request.POST.get('language')
+
+        # 1. 提出データをDBに保存 (Submissionモデル)
+        submission = Submission.objects.create(
+            problem=problem,
+            user=request.user,
+            code=code,
+            language=lang,
+            status='WJ'
+        )
+
+        # 2. 問題に紐付くテストケースをすべて取得
+        testcases = TestCase.objects.filter(problem=problem)
+        
+        if not testcases.exists():
+            result = "テストケースが登録されていません。"
+        else:
+            final_status = 'AC'
+            
+            # 3. テストケースを1つずつループで判定
+            for tc in testcases:
+                judge_res = run_code_in_docker(lang, code, tc.input_data)
+                
+                # 正解データ(tc.output_data)と実行結果(judge_res)を比較
+                if judge_res != tc.output_data.strip():
+                    # エラーメッセージが含まれている場合は RE や CE とする
+                    if "Error" in judge_res:
+                        final_status = 'RE' # 簡易的に実行エラー
+                    else:
+                        final_status = 'WA' # 不正解
+                    break # 一つでも間違えたらループ終了
+
+            # 4. 判定結果を保存
+            submission.status = final_status
+            submission.save()
+            result = f"判定結果: {submission.get_status_display()}"
+
+    return render(request, 'procon/problem_detail.html', {'problem': problem, 'result': result})
+【次回のタスク / 相談したいこと】
+動作テスト: 管理画面からテストケースを登録し、実際にブラウザからコードを提出して Submission モデルの status が AC や WA に更新されるか確認する。
+
+結果表示の充実:
+
+現在は problem_detail 内で結果をテキスト表示しているが、専用の「提出結果一覧（Submission List）」画面を作りたい。
+
+非同期化の検討: 現在はジャッジが終わるまでブラウザのレスポンスが待機状態になるため、提出数が増えた場合の Celery や Redis を使った非同期判定への移行タイミングの相談。
+
+チーム管理機能: サークル大会用に「チーム」単位でのスコア集計やランキング表示（Standings）の実装。
+
+多言語対応の拡充: Java や Rust 等、他の言語を Docker 環境とジャッジロジックに追加する方法。
+
+次回へのメッセージ： 「Dockerエンジンの単体テスト（C言語）は成功した。今は Django の views.py にそのロジックを組み込み、DBのテストケースと照合させる準備が整ったところだ。まずは実際にブラウザから提出して、DBのステータスが正しく変わるかテストするところから手伝ってほしい。」

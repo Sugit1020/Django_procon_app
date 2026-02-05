@@ -1,0 +1,59 @@
+・日本語設定
+まずは config/settings.py を開いて、以下の箇所を書き換えましょう。これで管理画面などが日本語になります。
+Python
+# config/settings.py
+# 言語を日本語に
+LANGUAGE_CODE = 'ja'
+# タイムゾーンを日本時間に
+TIME_ZONE = 'Asia/Tokyo'
+
+・アプリを作る
+ステップ2：アプリ（機能）を作る
+Djangoでは「プロジェクト（サイト全体）」の中に「アプリ（機能ごとのまとまり）」を作るのが基本です。今回は競技プログラミングの機能を入れる procon アプリを作りましょう。
+
+ターミナルで以下を実行してください。
+Bash
+python manage.py startapp procon
+すると、新しく procon/ というフォルダが作成されます。 この中の models.py というファイルが、「問題一覧」を作るためのデータベース設計図を書く場所になります。
+
+ステップ3：問題(Problem)モデルを作る
+早速、procon/models.py を開いて、問題の情報を定義しましょう。
+
+Python
+# procon/models.py
+from django.db import models
+
+class Problem(models.Model):
+    title = models.CharField(max_length=200)   # 問題タイトル
+    statement = models.TextField()             # 問題文
+    time_limit = models.IntegerField(default=2) # 制限時間（秒）
+    memory_limit = models.IntegerField(default=256) # メモリ制限（MB）
+    created_at = models.DateTimeField(auto_now_add=True) # 作成日時
+
+    def __str__(self):
+        return self.title
+ステップ4：アプリをプロジェクトに登録する
+作った procon アプリを Django に認識させる必要があります。 config/settings.py の INSTALLED_APPS に 1行追加してください。
+
+Python
+# config/settings.py
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'procon',  # ← これを追加！
+]
+ステップ5：データベースに反映する
+モデルを書いただけでは、データベースの中に「テーブル（表）」は作られません。以下の 2つのコマンドを実行して反映させます。
+
+Bash
+# 1. 設計図（マイグレーションファイル）を作成
+python manage.py makemigrations
+
+# 2. 実際にデータベースに反映
+python manage.py migrate
+これで、データベースに「問題を保存する場所」が完成しました！
