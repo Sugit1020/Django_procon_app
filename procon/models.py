@@ -41,4 +41,5 @@ class Submission(models.Model):
     language = models.CharField(max_length=20)
     #choicesで入力される文字列を限定している
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default='WJ')
+    score = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -20,11 +20,13 @@
 
         <div style="float: right;">
             <a href="{% url 'problem_list' %}">問題一覧</a> |
+            <a href="{% url 'ranking' %}">順位表</a> | 
+            
             {% if user.is_authenticated %}
-            <form action="{% url 'logout' %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit">ログアウト</button>
-</form>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">ログアウト</button>
+                </form>
             {% else %}
                 <a href="{% url 'login' %}">ログイン</a> | <a href="{% url 'signup' %}">参加登録</a>
             {% endif %}

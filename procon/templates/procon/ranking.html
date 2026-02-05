@@ -1,0 +1,26 @@
+{% extends "procon/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>🏆 総合ランキング</h2>
+    <table class="table table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>順位</th>
+                <th>ユーザー名</th>
+                <th>合計スコア</th>
+                <th>最終正解時刻</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ user.username }}</td>
+                <td><strong>{{ user.total_score }} 点</strong></td>
+                <td><small>{{ user.last_success|date:"m/d H:i" }}</small></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
